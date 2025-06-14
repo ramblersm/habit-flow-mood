@@ -22,6 +22,8 @@ const Setup = () => {
     e.preventDefault();
     setLoading(true);
 
+    console.log('Setup form submitted with:', { fullName, age, gender, userId: user?.id });
+
     try {
       const { error } = await supabase
         .from('profiles')
@@ -33,14 +35,20 @@ const Setup = () => {
         })
         .eq('id', user?.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
+
+      console.log('Profile updated successfully, navigating to home page');
 
       toast({
         title: "Welcome to HabitHaven!",
         description: "Your sanctuary is ready. Let's start building great habits!",
       });
 
-      navigate('/');
+      // Force navigation with replace to ensure clean transition
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
