@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
@@ -19,6 +18,15 @@ interface WeeklySummaryProps {
 }
 
 const WeeklySummary = ({ data, isLoading }: WeeklySummaryProps) => {
+  const getMoodEmoji = (mood: number | null) => {
+    if (!mood) return '😐';
+    if (mood <= 1.5) return '😢';
+    if (mood <= 2.5) return '😞';
+    if (mood <= 3.5) return '😐';
+    if (mood <= 4.5) return '😊';
+    return '😄';
+  };
+
   if (isLoading) {
     return (
       <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
@@ -93,7 +101,7 @@ const WeeklySummary = ({ data, isLoading }: WeeklySummaryProps) => {
             </CardHeader>
             <CardContent>
               <div className="text-xl sm:text-2xl font-bold">
-                {data[0]?.averageMood ? data[0].averageMood.toFixed(1) : 'N/A'}
+                {getMoodEmoji(data[0]?.averageMood || null)}
               </div>
               <p className="text-xs text-violet-100">
                 This week
