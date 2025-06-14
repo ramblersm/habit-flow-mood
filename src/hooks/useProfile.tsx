@@ -20,6 +20,7 @@ export const useProfile = () => {
   const loadProfile = async () => {
     if (!user) {
       console.log('useProfile - No user, skipping profile load');
+      setProfile(null);
       setLoading(false);
       return;
     }
@@ -49,7 +50,7 @@ export const useProfile = () => {
 
   useEffect(() => {
     loadProfile();
-  }, [user]);
+  }, [user?.id]); // Only depend on user.id to prevent unnecessary re-runs
 
   // Set up real-time subscription to profile changes
   useEffect(() => {
@@ -57,8 +58,8 @@ export const useProfile = () => {
 
     console.log('useProfile - Setting up profile subscription for user:', user.id);
 
-    const subscription = supabase
-      .channel('profile_changes')
+    const channel = supabase
+      .channel(`profile_changes_${user.id}`) // Unique channel name per user
       .on(
         'postgres_changes',
         {
@@ -76,9 +77,9 @@ export const useProfile = () => {
 
     return () => {
       console.log('useProfile - Cleaning up profile subscription');
-      subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id]); // Only depend on user.id
 
   return {
     profile,
