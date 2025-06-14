@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,7 +60,7 @@ const Index = () => {
       const habitsWithCompletion = (habitsData || []).map(habit => ({
         id: habit.id,
         name: habit.name,
-        type: habit.type,
+        type: habit.type as 'positive' | 'negative',
         completed: entriesData?.some(entry => entry.habit_id === habit.id && entry.completed) || false
       }));
 
@@ -109,10 +108,10 @@ const Index = () => {
 
       if (error) throw error;
 
-      const newHabit = {
+      const newHabit: Habit = {
         id: data.id,
         name: data.name,
-        type: data.type,
+        type: data.type as 'positive' | 'negative',
         completed: false
       };
 
