@@ -20,7 +20,7 @@ const BottomNavigation = () => {
           }`}
         >
           <Home size={20} />
-          <span className="text-xs font-medium">Dashboard</span>
+          <span className="text-xs font-medium">Home</span>
         </Link>
         
         <Link
@@ -32,7 +32,7 @@ const BottomNavigation = () => {
           }`}
         >
           <BarChart3 size={20} />
-          <span className="text-xs font-medium">Analytics</span>
+          <span className="text-xs font-medium">Summary</span>
         </Link>
       </div>
     </nav>

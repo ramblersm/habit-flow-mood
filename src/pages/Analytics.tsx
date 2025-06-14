@@ -38,7 +38,7 @@ const Analytics = () => {
       <Header />
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Analytics</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Summary</h1>
           <p className="text-sm sm:text-base text-gray-600">Track your progress over time</p>
         </div>
 
