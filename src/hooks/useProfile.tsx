@@ -50,36 +50,7 @@ export const useProfile = () => {
 
   useEffect(() => {
     loadProfile();
-  }, [user?.id]); // Only depend on user.id to prevent unnecessary re-runs
-
-  // Set up real-time subscription to profile changes
-  useEffect(() => {
-    if (!user) return;
-
-    console.log('useProfile - Setting up profile subscription for user:', user.id);
-
-    const channel = supabase
-      .channel(`profile_changes_${user.id}`) // Unique channel name per user
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('useProfile - Profile updated via subscription:', payload.new);
-          setProfile(payload.new as Profile);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('useProfile - Cleaning up profile subscription');
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]); // Only depend on user.id
+  }, [user?.id]);
 
   return {
     profile,
