@@ -110,12 +110,19 @@ export const useAnalytics = () => {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 56); // 8 weeks
 
+      console.log('Loading weekly data from', startDate.toISOString().split('T')[0], 'to', endDate.toISOString().split('T')[0]);
+
+      // Get all habits for the user first
+      const { data: habitsData, error: habitsError } = await supabase
+        .from('habits')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (habitsError) throw habitsError;
+
       const { data: entriesData, error: entriesError } = await supabase
         .from('habit_entries')
-        .select(`
-          *,
-          habits (name, type)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .gte('date', startDate.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0]);
@@ -131,13 +138,17 @@ export const useAnalytics = () => {
 
       if (moodError) throw moodError;
 
-      // Process weekly data
+      console.log('Fetched entries:', entriesData?.length, 'mood entries:', moodData?.length);
+
+      // Process weekly data - start from most recent week
       const weeks: WeeklyData[] = [];
+      const totalHabits = habitsData?.length || 0;
+
       for (let i = 0; i < 8; i++) {
-        const weekStart = new Date(startDate);
-        weekStart.setDate(startDate.getDate() + (i * 7));
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
+        const weekEnd = new Date(endDate);
+        weekEnd.setDate(endDate.getDate() - (i * 7));
+        const weekStart = new Date(weekEnd);
+        weekStart.setDate(weekEnd.getDate() - 6);
 
         const weekStartStr = weekStart.toISOString().split('T')[0];
         const weekEndStr = weekEnd.toISOString().split('T')[0];
@@ -150,16 +161,21 @@ export const useAnalytics = () => {
           mood.date >= weekStartStr && mood.date <= weekEndStr
         ) || [];
 
+        // Calculate daily totals for the week
+        const daysInWeek = 7;
+        const expectedTotalHabits = totalHabits * daysInWeek;
         const completedHabits = weekEntries.filter(entry => entry.completed).length;
-        const totalHabits = weekEntries.length;
+        
         const averageMood = weekMoods.length > 0 
           ? weekMoods.reduce((sum, mood) => sum + mood.mood, 0) / weekMoods.length
           : null;
 
+        console.log(`Week ${i + 1}: ${weekStartStr} to ${weekEndStr}, completed: ${completedHabits}, total possible: ${expectedTotalHabits}`);
+
         weeks.push({
           weekStart: weekStartStr,
           weekEnd: weekEndStr,
-          totalHabits,
+          totalHabits: expectedTotalHabits,
           completedHabits,
           averageMood,
           habitCompletion: {}

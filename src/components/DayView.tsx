@@ -33,7 +33,7 @@ const DayView = ({ date, data, isLoading }: DayViewProps) => {
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="text-center text-gray-500">Loading...</div>
         </CardContent>
       </Card>
@@ -44,34 +44,35 @@ const DayView = ({ date, data, isLoading }: DayViewProps) => {
   const totalHabits = data?.habits.length || 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar size={20} />
-            {date.toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Calendar size={18} className="sm:size-5" />
+            <span className="text-sm sm:text-base">
+              {date.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+              })}
+            </span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
             Your habits and mood for this day
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="p-3 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Habits Summary */}
-            <div className="space-y-3">
-              <h3 className="font-semibold text-lg">Habits Summary</h3>
+            <div className="space-y-2 sm:space-y-3">
+              <h3 className="font-semibold text-base sm:text-lg">Habits Summary</h3>
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-blue-600">
+                <span className="text-xl sm:text-2xl font-bold text-blue-600">
                   {completedHabits}/{totalHabits}
                 </span>
-                <span className="text-gray-600">completed</span>
+                <span className="text-sm sm:text-base text-gray-600">completed</span>
                 {totalHabits > 0 && (
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="text-xs">
                     {Math.round((completedHabits / totalHabits) * 100)}%
                   </Badge>
                 )}
@@ -79,21 +80,21 @@ const DayView = ({ date, data, isLoading }: DayViewProps) => {
             </div>
 
             {/* Mood */}
-            <div className="space-y-3">
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                <Smile size={20} />
+            <div className="space-y-2 sm:space-y-3">
+              <h3 className="font-semibold text-base sm:text-lg flex items-center gap-2">
+                <Smile size={18} className="sm:size-5" />
                 Mood
               </h3>
               {data?.mood ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-3xl">{getMoodEmoji(data.mood)}</span>
+                  <span className="text-2xl sm:text-3xl">{getMoodEmoji(data.mood)}</span>
                   <div>
-                    <div className="font-semibold">{getMoodLabel(data.mood)}</div>
-                    <div className="text-sm text-gray-600">{data.mood}/5</div>
+                    <div className="font-semibold text-sm sm:text-base">{getMoodLabel(data.mood)}</div>
+                    <div className="text-xs sm:text-sm text-gray-600">{data.mood}/5</div>
                   </div>
                 </div>
               ) : (
-                <div className="text-gray-500">No mood recorded</div>
+                <div className="text-gray-500 text-sm">No mood recorded</div>
               )}
             </div>
           </div>
@@ -102,29 +103,30 @@ const DayView = ({ date, data, isLoading }: DayViewProps) => {
 
       {/* Detailed Habits List */}
       <Card>
-        <CardHeader>
-          <CardTitle>Habits Detail</CardTitle>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">Habits Detail</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6">
           {data?.habits.length ? (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {data.habits.map((habit) => (
                 <div
                   key={habit.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  className="flex items-center justify-between p-2 sm:p-3 border rounded-lg"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                     {habit.completed ? (
-                      <CheckCircle className="text-green-500" size={20} />
+                      <CheckCircle className="text-green-500 flex-shrink-0" size={18} />
                     ) : (
-                      <XCircle className="text-gray-400" size={20} />
+                      <XCircle className="text-gray-400 flex-shrink-0" size={18} />
                     )}
-                    <span className={habit.completed ? 'text-green-700' : 'text-gray-500'}>
+                    <span className={`text-sm sm:text-base truncate ${habit.completed ? 'text-green-700' : 'text-gray-500'}`}>
                       {habit.name}
                     </span>
                   </div>
                   <Badge 
                     variant={habit.type === 'positive' ? 'default' : 'destructive'}
+                    className="text-xs flex-shrink-0 ml-2"
                   >
                     {habit.type}
                   </Badge>
@@ -132,7 +134,7 @@ const DayView = ({ date, data, isLoading }: DayViewProps) => {
               ))}
             </div>
           ) : (
-            <div className="text-center text-gray-500 py-4">
+            <div className="text-center text-gray-500 py-4 text-sm">
               No habits recorded for this day
             </div>
           )}
