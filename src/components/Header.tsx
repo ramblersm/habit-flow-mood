@@ -1,50 +1,58 @@
 
 import React from 'react';
-import { LogOut, Home } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Home, BarChart3, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useProfile } from '@/hooks/useProfile';
 
 const Header = () => {
   const { signOut } = useAuth();
-  const { profile } = useProfile();
+  const location = useLocation();
 
-  const getFirstName = () => {
-    if (profile?.full_name) {
-      return profile.full_name.split(' ')[0];
-    }
-    return 'there';
-  };
+  const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm border-b border-blue-100">
-      <div className="max-w-2xl mx-auto px-4 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Home className="h-8 w-8 text-blue-600" />
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                HabitHaven
-              </h1>
-              <p className="text-xs text-blue-500 font-medium">Your daily sanctuary</p>
-            </div>
+    <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <Link to="/" className="text-2xl font-bold text-blue-600">
+              HabitHaven
+            </Link>
+            <nav className="flex space-x-4">
+              <Link
+                to="/"
+                className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
+                  isActive('/') 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <Home size={16} />
+                Dashboard
+              </Link>
+              <Link
+                to="/analytics"
+                className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
+                  isActive('/analytics') 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <BarChart3 size={16} />
+                Analytics
+              </Link>
+            </nav>
           </div>
-          <div className="ml-4">
-            <h2 className="text-lg font-semibold text-gray-800">
-              Welcome, {getFirstName()}!
-            </h2>
-            <p className="text-sm text-gray-600">Build your perfect day</p>
-          </div>
+          <Button 
+            variant="outline" 
+            onClick={signOut}
+            className="flex items-center gap-2"
+          >
+            <LogOut size={16} />
+            Sign Out
+          </Button>
         </div>
-        <Button
-          onClick={signOut}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
-        >
-          <LogOut size={16} />
-          Sign Out
-        </Button>
       </div>
     </header>
   );
