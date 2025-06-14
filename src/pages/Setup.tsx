@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 import { Home, Sparkles } from 'lucide-react';
 
 const Setup = () => {
@@ -17,6 +17,7 @@ const Setup = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { refetchProfile } = useProfile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +41,10 @@ const Setup = () => {
         throw error;
       }
 
-      console.log('Profile updated successfully, navigating to home page');
+      console.log('Profile updated successfully, refetching profile and navigating to home page');
+
+      // Refetch the profile to ensure the updated data is loaded
+      await refetchProfile();
 
       toast({
         title: "Welcome to HabitHaven!",
