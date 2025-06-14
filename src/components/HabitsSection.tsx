@@ -19,6 +19,7 @@ interface HabitsSectionProps {
   onDeleteHabit: (id: string) => void;
   onAddHabit: (name: string, type: 'positive' | 'negative') => void;
   onSaveHabit: (id: string, name: string, type: 'positive' | 'negative') => void;
+  selectedDate: Date;
 }
 
 const HabitsSection = ({ 
@@ -26,7 +27,8 @@ const HabitsSection = ({
   onToggleHabit, 
   onDeleteHabit, 
   onAddHabit, 
-  onSaveHabit 
+  onSaveHabit,
+  selectedDate
 }: HabitsSectionProps) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);

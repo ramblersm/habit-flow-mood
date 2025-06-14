@@ -4,9 +4,10 @@ import React from 'react';
 interface MoodTrackerProps {
   mood: number | null;
   onMoodChange: (mood: number) => void;
+  selectedDate: Date;
 }
 
-const MoodTracker = ({ mood, onMoodChange }: MoodTrackerProps) => {
+const MoodTracker = ({ mood, onMoodChange, selectedDate }: MoodTrackerProps) => {
   const moods = [
     { value: 1, emoji: '😢', label: 'Very Bad' },
     { value: 2, emoji: '😔', label: 'Bad' },
