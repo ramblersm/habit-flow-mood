@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,39 +8,47 @@ export const useMood = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [mood, setMood] = useState<number | null>(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  const today = new Date().toISOString().split('T')[0];
+  const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
-  const loadMoodEntry = async () => {
+  const loadMoodEntry = useCallback(async (date: Date) => {
+    if (!user) return;
+    
     try {
+      const dateStr = formatDate(date);
+      
       const { data, error } = await supabase
         .from('mood_entries')
         .select('mood')
         .eq('user_id', user?.id)
-        .eq('date', today)
+        .eq('date', dateStr)
         .maybeSingle();
 
       if (error) throw error;
       
       setMood(data?.mood || null);
+      setCurrentDate(date);
     } catch (error) {
       console.error('Error loading mood:', error);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (user) {
-      loadMoodEntry();
+      loadMoodEntry(new Date());
     }
-  }, [user]);
+  }, [user, loadMoodEntry]);
 
   const setMoodEntry = async (moodValue: number) => {
     try {
+      const dateStr = formatDate(currentDate);
+      
       await supabase
         .from('mood_entries')
         .upsert({
           user_id: user?.id,
-          date: today,
+          date: dateStr,
           mood: moodValue
         });
 
@@ -48,7 +56,7 @@ export const useMood = () => {
       
       toast({
         title: "Mood recorded",
-        description: "Your mood for today has been saved.",
+        description: "Your mood for this day has been saved.",
       });
     } catch (error) {
       console.error('Error saving mood:', error);
@@ -60,8 +68,13 @@ export const useMood = () => {
     }
   };
 
+  const loadMoodForDate = useCallback((date: Date) => {
+    loadMoodEntry(date);
+  }, [loadMoodEntry]);
+
   return {
     mood,
-    setMoodEntry
+    setMoodEntry,
+    loadMoodForDate
   };
 };

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,11 +16,16 @@ export const useHabits = () => {
   const { user } = useAuth();
   const [habits, setHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  const today = new Date().toISOString().split('T')[0];
+  const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
-  const loadHabitsAndEntries = async () => {
+  const loadHabitsAndEntries = useCallback(async (date: Date) => {
+    if (!user) return;
+    
     try {
+      const dateStr = formatDate(date);
+      
       // Get user's habits
       const { data: habitsData, error: habitsError } = await supabase
         .from('habits')
@@ -30,16 +35,16 @@ export const useHabits = () => {
 
       if (habitsError) throw habitsError;
 
-      // Get today's habit entries
+      // Get habit entries for the specific date
       const { data: entriesData, error: entriesError } = await supabase
         .from('habit_entries')
         .select('*')
         .eq('user_id', user?.id)
-        .eq('date', today);
+        .eq('date', dateStr);
 
       if (entriesError) throw entriesError;
 
-      // Combine habits with completion status
+      // Combine habits with completion status for the selected date
       const habitsWithCompletion = (habitsData || []).map(habit => ({
         id: habit.id,
         name: habit.name,
@@ -48,6 +53,7 @@ export const useHabits = () => {
       }));
 
       setHabits(habitsWithCompletion);
+      setCurrentDate(date);
     } catch (error) {
       console.error('Error loading habits:', error);
       toast({
@@ -58,13 +64,13 @@ export const useHabits = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
 
   useEffect(() => {
     if (user) {
-      loadHabitsAndEntries();
+      loadHabitsAndEntries(new Date());
     }
-  }, [user]);
+  }, [user, loadHabitsAndEntries]);
 
   const addHabit = async (name: string, type: 'positive' | 'negative') => {
     try {
@@ -108,6 +114,7 @@ export const useHabits = () => {
     if (!habit) return;
 
     const newCompleted = !habit.completed;
+    const dateStr = formatDate(currentDate);
 
     try {
       if (newCompleted) {
@@ -117,7 +124,7 @@ export const useHabits = () => {
           .upsert({
             user_id: user?.id,
             habit_id: id,
-            date: today,
+            date: dateStr,
             completed: true
           });
       } else {
@@ -127,7 +134,7 @@ export const useHabits = () => {
           .delete()
           .eq('user_id', user?.id)
           .eq('habit_id', id)
-          .eq('date', today);
+          .eq('date', dateStr);
       }
 
       setHabits(prev => prev.map(h => 
@@ -199,12 +206,17 @@ export const useHabits = () => {
     }
   };
 
+  const loadHabitsForDate = useCallback((date: Date) => {
+    loadHabitsAndEntries(date);
+  }, [loadHabitsAndEntries]);
+
   return {
     habits,
     loading,
     addHabit,
     toggleHabit,
     deleteHabit,
-    saveHabit
+    saveHabit,
+    loadHabitsForDate
   };
 };
