@@ -10,7 +10,7 @@ import { useMood } from '@/hooks/useMood';
 
 const Index = () => {
   const { habits, addHabit, toggleHabit, deleteHabit, saveHabit } = useHabits();
-  const { mood, setMood } = useMood();
+  const { mood, setMoodEntry } = useMood();
 
   const completedHabits = habits.filter(habit => habit.completed).length;
   const totalHabits = habits.length;
@@ -32,7 +32,7 @@ const Index = () => {
         />
         <MoodTracker 
           mood={mood}
-          onMoodChange={setMood}
+          onMoodChange={setMoodEntry}
         />
       </div>
       <PWAInstallPrompt />
