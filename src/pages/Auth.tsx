@@ -12,7 +12,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signUp, signIn, signInWithGoogle } = useAuth();
+  const { signUp, signIn } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -44,28 +44,6 @@ const Auth = () => {
           });
           navigate('/');
         }
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-      const { error } = await signInWithGoogle();
-      if (error) {
-        toast({
-          title: "Authentication Error",
-          description: error.message,
-          variant: "destructive",
-        });
       }
     } catch (error) {
       toast({
@@ -122,23 +100,13 @@ const Auth = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div>
             <Button
               type="submit"
               disabled={loading}
               className="w-full"
             >
               {loading ? 'Please wait...' : (isSignUp ? 'Sign up' : 'Sign in')}
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-              className="w-full"
-            >
-              Continue with Google
             </Button>
           </div>
 
