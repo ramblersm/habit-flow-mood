@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { CalendarDays, BarChart3, TrendingUp } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import Header from '@/components/Header';
+import BottomNavigation from '@/components/BottomNavigation';
 import DayView from '@/components/DayView';
 import WeeklySummary from '@/components/WeeklySummary';
 import MonthlySummary from '@/components/MonthlySummary';
@@ -33,7 +34,7 @@ const Analytics = () => {
   }, [loadWeeklyData, loadMonthlyData]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pb-20">
       <Header />
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         <div className="mb-4 sm:mb-6">
@@ -102,6 +103,7 @@ const Analytics = () => {
           </TabsContent>
         </Tabs>
       </div>
+      <BottomNavigation />
     </div>
   );
 };
