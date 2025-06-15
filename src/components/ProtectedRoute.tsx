@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,8 +18,14 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   console.log('ProtectedRoute - Profile:', profile);
   console.log('ProtectedRoute - Auth loading:', authLoading, 'Profile loading:', profileLoading);
 
-  // 🛡️ Wait until both user and profile are resolved
-  if (authLoading || profileLoading || profile === null) {
+  // 🔐 No user? Redirect to auth immediately
+  if (!authLoading && !user) {
+    console.log('ProtectedRoute - No user, redirecting to auth');
+    return <Navigate to="/auth" replace />;
+  }
+
+  // 🛡️ Wait until auth and profile are resolved (only if we have a user)
+  if (authLoading || (user && profileLoading)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -29,20 +36,14 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  // 🔐 No user? Redirect to auth
-  if (!user) {
-    console.log('ProtectedRoute - No user, redirecting to auth');
-    return <Navigate to="/auth" replace />;
-  }
-
   // 🔄 Incomplete setup? Redirect to setup
-  if (!profile.setup_completed && location.pathname !== '/setup') {
+  if (user && profile && !profile.setup_completed && location.pathname !== '/setup') {
     console.log('ProtectedRoute - Setup not completed, redirecting to setup');
     return <Navigate to="/setup" replace />;
   }
 
-  // 🏠 Setup done? Don’t allow going back to /setup
-  if (profile.setup_completed && location.pathname === '/setup') {
+  // 🏠 Setup done? Don't allow going back to /setup
+  if (user && profile && profile.setup_completed && location.pathname === '/setup') {
     console.log('ProtectedRoute - Setup completed, redirecting to home');
     return <Navigate to="/" replace />;
   }
