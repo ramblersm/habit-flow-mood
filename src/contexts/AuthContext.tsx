@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('AuthProvider - Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
@@ -70,16 +70,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('AuthProvider - Sign up result:', { data: data?.user?.id, error });
       
       if (!error && data?.user) {
-        // Account created successfully
         console.log('AuthProvider - Account created successfully');
+        // Don't set loading to false here - let the auth state change handle it
+        return { error: null };
       }
       
+      setLoading(false);
       return { error };
     } catch (err) {
       console.error('AuthProvider - Error creating account:', err);
-      return { error: err };
-    } finally {
       setLoading(false);
+      return { error: err };
     }
   };
 
@@ -94,12 +95,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       console.log('AuthProvider - Sign in result:', { data: data?.user?.id, error });
+      
+      if (!error && data?.user) {
+        // Don't set loading to false here - let the auth state change handle it
+        return { error: null };
+      }
+      
+      setLoading(false);
       return { error };
     } catch (err) {
       console.error('AuthProvider - Error signing in:', err);
-      return { error: err };
-    } finally {
       setLoading(false);
+      return { error: err };
     }
   };
 

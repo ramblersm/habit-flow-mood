@@ -39,16 +39,17 @@ const LoginForm = ({ onSwitchToOnboarding }: LoginFormProps) => {
         console.error('LoginForm - Sign in error:', error);
         toast({
           title: "Sign in failed",
-          description: error.message,
+          description: error.message || "Invalid email or password",
           variant: "destructive",
         });
+        setLoading(false);
       } else {
         console.log('LoginForm - Sign in successful');
         toast({
           title: "Welcome back!",
           description: "You've successfully signed in to your haven.",
         });
-        // The user will be automatically redirected by ProtectedRoute
+        // Don't manually set loading to false - let auth state change handle it
       }
     } catch (error) {
       console.error('LoginForm - Unexpected error:', error);
@@ -57,7 +58,6 @@ const LoginForm = ({ onSwitchToOnboarding }: LoginFormProps) => {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };

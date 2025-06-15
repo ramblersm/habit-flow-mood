@@ -60,22 +60,21 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
         console.error('OnboardingFlow - Account creation error:', error);
         toast({
           title: "Error",
-          description: error.message,
+          description: error.message || "Failed to create account",
           variant: "destructive",
         });
         setLoading(false);
         return;
       }
 
-      // Show success message
+      console.log('OnboardingFlow - Account created successfully');
       toast({
         title: "Welcome to HabitHaven!",
         description: "Your sanctuary is ready. Let's start building great habits!",
       });
       
-      console.log('OnboardingFlow - Account created successfully, calling onComplete');
-      // The user will be automatically redirected by ProtectedRoute once authenticated
-      onComplete();
+      // The AuthProvider will handle the auth state change and redirect
+      // Don't call onComplete here, let the auth state change handle the redirect
     } catch (error) {
       console.error('OnboardingFlow - Error creating account:', error);
       toast({
