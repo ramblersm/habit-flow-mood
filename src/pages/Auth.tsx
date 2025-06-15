@@ -11,34 +11,43 @@ const Auth = () => {
   const { profile, loading: profileLoading } = useProfile();
   const navigate = useNavigate();
 
-  // 🔁 Add this effect to auto-redirect if user is signed in
+  // ✅ Only redirect once profile exists
   useEffect(() => {
     if (!loading && user && !profileLoading) {
-      if (!profile?.setup_completed) {
+      if (!profile) {
+        console.log('Auth.tsx - Profile is null. Waiting before redirect...');
+        return;
+      }
+
+      if (!profile.setup_completed) {
+        console.log('Auth.tsx - Redirecting to /setup');
         navigate('/setup', { replace: true });
       } else {
+        console.log('Auth.tsx - Redirecting to /');
         navigate('/', { replace: true });
       }
     }
   }, [user, loading, profile, profileLoading, navigate]);
 
   const handleOnboardingComplete = () => {
-    console.log('Auth - Onboarding completed, user should be redirected');
-    // No need to manually navigate — useEffect will handle it
+    console.log('Auth - Onboarding completed');
   };
 
   const handleSwitchToLogin = () => {
-    console.log('Auth - Switching to login');
     setIsNewUser(false);
   };
 
   const handleSwitchToOnboarding = () => {
-    console.log('Auth - Switching to onboarding');
     setIsNewUser(true);
   };
 
   if (isNewUser) {
-    return <OnboardingFlow onComplete={handleOnboardingComplete} onSwitchToLogin={handleSwitchToLogin} />;
+    return (
+      <OnboardingFlow
+        onComplete={handleOnboardingComplete}
+        onSwitchToLogin={handleSwitchToLogin}
+      />
+    );
   }
 
   return <LoginForm onSwitchToOnboarding={handleSwitchToOnboarding} />;
