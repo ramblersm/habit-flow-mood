@@ -31,22 +31,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('AuthProvider - Setting up auth state listener');
     
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('AuthProvider - Auth state changed:', event, session?.user?.id);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+  async (event, session) => {
+    console.log('AuthProvider - Auth state changed:', event, session?.user?.id);
+
+    if (!session) {
+      console.warn('AuthProvider - No session returned on auth state change');
+      setUser(null);
+      setSession(null);
+      setLoading(false);
+      return;
+    }
+
+    setSession(session);
+    setUser(session.user);
+    setLoading(false);
+  }
+);
+
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('AuthProvider - Initial session check:', session?.user?.id);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+supabase.auth.getSession().then(({ data: { session }, error }) => {
+  if (error?.code === 'session_not_found') {
+    console.warn('AuthProvider - Invalid session, signing out');
+    supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
+    setLoading(false);
+    return;
+  }
+
+  console.log('AuthProvider - Initial session check:', session?.user?.id);
+  setSession(session);
+  setUser(session?.user ?? null);
+  setLoading(false);
+});
+
 
     return () => {
       console.log('AuthProvider - Cleaning up subscription');
