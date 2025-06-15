@@ -7,8 +7,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  sendOtp: (email: string) => Promise<{ error: any }>;
-  verifyOtp: (email: string, token: string) => Promise<{ error: any }>;
+  createAccount: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -47,23 +47,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const sendOtp = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
+  const createAccount = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
       email,
+      password,
       options: {
-        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/`,
       },
     });
     return { error };
   };
 
-  const verifyOtp = async (email: string, token: string) => {
-    const { data, error } = await supabase.auth.verifyOtp({
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      token,
-      type: 'email',
+      password,
     });
-    // On success, onAuthStateChange will fire and update session/user.
     return { error };
   };
 
@@ -75,8 +74,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     user,
     session,
     loading,
-    sendOtp,
-    verifyOtp,
+    createAccount,
+    signIn,
     signOut,
   };
 
