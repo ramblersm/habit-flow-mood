@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Home } from 'lucide-react';
-import GoogleIcon from '@/components/GoogleIcon';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -15,7 +13,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
-  const { signUp, signIn, signInWithGoogle, signInWithMagicLink } = useAuth();
+  const { signUp, signIn, signInWithMagicLink } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -59,25 +57,6 @@ const Auth = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    setMagicLinkSent(false);
-    const { error } = await signInWithGoogle();
-    if (error) {
-      toast({
-        title: "Authentication Error",
-        description: error.message,
-        variant: "destructive",
-      });
-      setLoading(false);
-    } else {
-      toast({
-        title: "Welcome!",
-        description: "Redirecting you to your haven...",
-      });
     }
   };
 
@@ -135,36 +114,13 @@ const Auth = () => {
         </div>
 
         <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-8 border border-white/20">
-          <div className="space-y-4">
-            <Button
-              variant="outline"
-              className="w-full bg-white/80 hover:bg-white border-blue-200"
-              onClick={handleGoogleSignIn}
-              disabled={loading}
-            >
-              <GoogleIcon className="mr-2 h-5 w-5" />
-              Continue with Google
-            </Button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white/70 px-2 text-gray-500">
-                  Or
-                </span>
-              </div>
-            </div>
-          </div>
-
           {magicLinkSent ? (
-            <div className="text-center p-4 bg-blue-100/50 rounded-lg mt-4">
+            <div className="text-center p-4 bg-blue-100/50 rounded-lg">
               <h3 className="font-bold text-blue-800">Check your inbox!</h3>
               <p className="text-sm text-blue-700 mt-1">We've sent a magic link to <strong>{email}</strong>. Click the link to sign in.</p>
             </div>
           ) : (
-            <form className="space-y-6 mt-4" onSubmit={handlePasswordSubmit}>
+            <form className="space-y-6" onSubmit={handlePasswordSubmit}>
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="email" className="text-gray-700">Email address</Label>
