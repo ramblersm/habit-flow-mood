@@ -49,6 +49,7 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
   };
 
   const handleFinish = async () => {
+    console.log('OnboardingFlow - Starting account creation');
     setLoading(true);
     
     try {
@@ -56,6 +57,7 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
       const { error } = await createAccount(data.email, data.password);
       
       if (error) {
+        console.error('OnboardingFlow - Account creation error:', error);
         toast({
           title: "Error",
           description: error.message,
@@ -65,21 +67,22 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
         return;
       }
 
-      // Show success and complete onboarding
+      // Show success message
       toast({
         title: "Welcome to HabitHaven!",
         description: "Your sanctuary is ready. Let's start building great habits!",
       });
       
+      console.log('OnboardingFlow - Account created successfully, calling onComplete');
+      // The user will be automatically redirected by ProtectedRoute once authenticated
       onComplete();
     } catch (error) {
-      console.error('Error creating account:', error);
+      console.error('OnboardingFlow - Error creating account:', error);
       toast({
         title: "Error",
         description: "Failed to create your account. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };

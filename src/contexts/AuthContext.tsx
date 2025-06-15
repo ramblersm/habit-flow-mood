@@ -28,9 +28,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AuthProvider - Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('AuthProvider - Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -39,35 +42,78 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('AuthProvider - Initial session check:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('AuthProvider - Cleaning up subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const createAccount = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-      },
-    });
-    return { error };
+    console.log('AuthProvider - Creating account for:', email);
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      console.log('AuthProvider - Sign up result:', { data: data?.user?.id, error });
+      
+      if (!error && data?.user) {
+        // Account created successfully
+        console.log('AuthProvider - Account created successfully');
+      }
+      
+      return { error };
+    } catch (err) {
+      console.error('AuthProvider - Error creating account:', err);
+      return { error: err };
+    } finally {
+      setLoading(false);
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    console.log('AuthProvider - Signing in:', email);
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      console.log('AuthProvider - Sign in result:', { data: data?.user?.id, error });
+      return { error };
+    } catch (err) {
+      console.error('AuthProvider - Error signing in:', err);
+      return { error: err };
+    } finally {
+      setLoading(false);
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    console.log('AuthProvider - Signing out');
+    setLoading(true);
+    
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('AuthProvider - Error signing out:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const value = {
@@ -78,6 +124,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signIn,
     signOut,
   };
+
+  console.log('AuthProvider - Current state:', { 
+    user: user?.id, 
+    session: !!session, 
+    loading 
+  });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -29,22 +29,37 @@ const LoginForm = ({ onSwitchToOnboarding }: LoginFormProps) => {
       return;
     }
 
+    console.log('LoginForm - Starting sign in for:', email);
     setLoading(true);
-    const { error } = await signIn(email, password);
     
-    if (error) {
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        console.error('LoginForm - Sign in error:', error);
+        toast({
+          title: "Sign in failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        console.log('LoginForm - Sign in successful');
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully signed in to your haven.",
+        });
+        // The user will be automatically redirected by ProtectedRoute
+      }
+    } catch (error) {
+      console.error('LoginForm - Unexpected error:', error);
       toast({
         title: "Sign in failed",
-        description: error.message,
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully signed in to your haven.",
-      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -106,7 +121,7 @@ const LoginForm = ({ onSwitchToOnboarding }: LoginFormProps) => {
                 disabled={loading || !email || !password}
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium"
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Entering your haven...' : 'Enter My Haven'}
               </Button>
             </div>
           </form>
