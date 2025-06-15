@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,44 +28,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     console.log('AuthProvider - Setting up auth state listener');
-    
-    // Set up auth state listener
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-  async (event, session) => {
-    console.log('AuthProvider - Auth state changed:', event, session?.user?.id);
 
-    if (!session) {
-      console.warn('AuthProvider - No session returned on auth state change');
-      setUser(null);
-      setSession(null);
+    // 1. Initial session check (handles stale sessions)
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error?.code === 'session_not_found') {
+        console.warn('AuthProvider - Invalid session found. Signing out.');
+        supabase.auth.signOut().then(() => {
+          setUser(null);
+          setSession(null);
+          setLoading(false);
+        });
+        return;
+      }
+
+      console.log('AuthProvider - Initial session check:', session?.user?.id);
+      setUser(session?.user ?? null);
+      setSession(session);
       setLoading(false);
-      return;
-    }
+    });
 
-    setSession(session);
-    setUser(session.user);
-    setLoading(false);
-  }
-);
+    // 2. Listen to any auth state changes (login, logout, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('AuthProvider - Auth state changed:', event, session?.user?.id);
 
+        if (!session) {
+          setUser(null);
+          setSession(null);
+          setLoading(false);
+          return;
+        }
 
-    // Check for existing session
-supabase.auth.getSession().then(({ data: { session }, error }) => {
-  if (error?.code === 'session_not_found') {
-    console.warn('AuthProvider - Invalid session, signing out');
-    supabase.auth.signOut();
-    setSession(null);
-    setUser(null);
-    setLoading(false);
-    return;
-  }
-
-  console.log('AuthProvider - Initial session check:', session?.user?.id);
-  setSession(session);
-  setUser(session?.user ?? null);
-  setLoading(false);
-});
-
+        setUser(session.user);
+        setSession(session);
+        setLoading(false);
+      }
+    );
 
     return () => {
       console.log('AuthProvider - Cleaning up subscription');
@@ -77,7 +74,7 @@ supabase.auth.getSession().then(({ data: { session }, error }) => {
   const createAccount = async (email: string, password: string) => {
     console.log('AuthProvider - Creating account for:', email);
     setLoading(true);
-    
+
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -88,13 +85,11 @@ supabase.auth.getSession().then(({ data: { session }, error }) => {
       });
 
       console.log('AuthProvider - Sign up result:', { data: data?.user?.id, error });
-      
+
       if (!error && data?.user) {
-        console.log('AuthProvider - Account created successfully');
-        // Don't set loading to false here - let the auth state change handle it
         return { error: null };
       }
-      
+
       setLoading(false);
       return { error };
     } catch (err) {
@@ -107,7 +102,7 @@ supabase.auth.getSession().then(({ data: { session }, error }) => {
   const signIn = async (email: string, password: string) => {
     console.log('AuthProvider - Signing in:', email);
     setLoading(true);
-    
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -115,12 +110,11 @@ supabase.auth.getSession().then(({ data: { session }, error }) => {
       });
 
       console.log('AuthProvider - Sign in result:', { data: data?.user?.id, error });
-      
+
       if (!error && data?.user) {
-        // Don't set loading to false here - let the auth state change handle it
         return { error: null };
       }
-      
+
       setLoading(false);
       return { error };
     } catch (err) {
@@ -133,12 +127,14 @@ supabase.auth.getSession().then(({ data: { session }, error }) => {
   const signOut = async () => {
     console.log('AuthProvider - Signing out');
     setLoading(true);
-    
+
     try {
       await supabase.auth.signOut();
     } catch (err) {
       console.error('AuthProvider - Error signing out:', err);
     } finally {
+      setUser(null);
+      setSession(null);
       setLoading(false);
     }
   };
@@ -152,10 +148,10 @@ supabase.auth.getSession().then(({ data: { session }, error }) => {
     signOut,
   };
 
-  console.log('AuthProvider - Current state:', { 
-    user: user?.id, 
-    session: !!session, 
-    loading 
+  console.log('AuthProvider - Current state:', {
+    user: user?.id,
+    session: !!session,
+    loading,
   });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
