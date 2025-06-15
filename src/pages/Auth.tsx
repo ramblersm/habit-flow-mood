@@ -1,35 +1,16 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useProfile } from '@/hooks/useProfile';
 import OnboardingFlow from '@/components/OnboardingFlow';
 import LoginForm from '@/components/LoginForm';
 
 const Auth = () => {
   const [isNewUser, setIsNewUser] = useState(true);
-  const { user, loading } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
-  const navigate = useNavigate();
-
-  // ✅ Let ProtectedRoute handle redirects after auth is complete
-  useEffect(() => {
-    if (!loading && user && !profileLoading && profile) {
-      console.log('Auth.tsx - User authenticated with profile, redirecting based on setup status');
-      
-      if (!profile.setup_completed) {
-        console.log('Auth.tsx - Redirecting to /setup');
-        navigate('/setup', { replace: true });
-      } else {
-        console.log('Auth.tsx - Redirecting to /');
-        navigate('/', { replace: true });
-      }
-    }
-  }, [user, loading, profile, profileLoading, navigate]);
+  const { loading } = useAuth();
 
   const handleOnboardingComplete = () => {
     console.log('Auth - Onboarding completed, auth state will handle redirect');
-    // Don't manually navigate - let the useEffect above handle it
+    // Let ProtectedRoute handle all navigation automatically
   };
 
   const handleSwitchToLogin = () => {
@@ -40,8 +21,8 @@ const Auth = () => {
     setIsNewUser(true);
   };
 
-  // Show loading while auth is being resolved
-  if (loading || (user && profileLoading)) {
+  // Show loading only during initial auth check
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">

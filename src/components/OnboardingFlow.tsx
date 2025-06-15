@@ -62,6 +62,7 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
 
     try {
       // Step 1: Create the account
+      console.log('OnboardingFlow - Creating account...');
       const { error: authError } = await createAccount(data.email, data.password);
 
       if (authError) {
@@ -75,29 +76,26 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
         return;
       }
 
-      console.log('OnboardingFlow - Account created, waiting for auth state...');
+      console.log('OnboardingFlow - Account created successfully');
 
-      // Step 2: Wait a moment for auth state to settle
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Step 3: Get the current user
-      const { data: userData, error: userError } = await supabase.auth.getUser();
+      // Step 2: Get the current user session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (userError || !userData?.user) {
-        console.error('OnboardingFlow - Error getting user after signup:', userError);
+      if (sessionError || !session?.user) {
+        console.error('OnboardingFlow - Error getting session:', sessionError);
         toast({
           title: 'Error',
-          description: 'Account created but failed to get user data. Please try logging in.',
+          description: 'Account created but failed to get session. Please try logging in.',
           variant: 'destructive',
         });
         setLoading(false);
         return;
       }
 
-      const user = userData.user;
-      console.log('OnboardingFlow - User obtained:', user.id);
+      const user = session.user;
+      console.log('OnboardingFlow - Got user session:', user.id);
 
-      // Step 4: Create or update the profile with complete data
+      // Step 3: Update the profile with complete data
       const profileData = {
         id: user.id,
         email: user.email,
@@ -107,7 +105,7 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
         setup_completed: false, // Will be set to true in Setup page
       };
 
-      console.log('OnboardingFlow - Creating profile with data:', profileData);
+      console.log('OnboardingFlow - Updating profile with data:', profileData);
 
       const { error: profileError } = await supabase
         .from('profiles')
@@ -117,7 +115,7 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
         });
 
       if (profileError) {
-        console.error('OnboardingFlow - Error creating profile:', profileError);
+        console.error('OnboardingFlow - Error updating profile:', profileError);
         toast({
           title: 'Profile Creation Failed',
           description: 'Your account was created but we had trouble setting up your profile. Please try refreshing the page.',
@@ -127,15 +125,15 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
         return;
       }
 
-      console.log('OnboardingFlow - Profile created successfully');
+      console.log('OnboardingFlow - Profile updated successfully');
 
       toast({
         title: 'Welcome to HabitHaven!',
         description: "Your account is ready. Setting up your sanctuary...",
       });
 
-      // Let the auth context and ProtectedRoute handle the navigation
-      // Don't manually navigate here to avoid race conditions
+      // Let the auth state change and ProtectedRoute handle navigation
+      console.log('OnboardingFlow - Calling onComplete');
       onComplete();
 
     } catch (error) {
