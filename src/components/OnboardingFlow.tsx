@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,9 +17,10 @@ interface OnboardingData {
 
 interface OnboardingFlowProps {
   onComplete: () => void;
+  onSwitchToLogin: () => void;
 }
 
-const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
+const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<OnboardingData>({
     name: '',
@@ -114,6 +114,18 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
                 placeholder="Enter your full name"
                 className="mt-1 bg-white/50 border-blue-200 focus:border-blue-400 focus:ring-blue-400"
               />
+            </div>
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <button
+                  onClick={onSwitchToLogin}
+                  className="font-medium text-blue-600 hover:underline"
+                  disabled={loading}
+                >
+                  Sign in to your haven
+                </button>
+              </p>
             </div>
           </div>
         );

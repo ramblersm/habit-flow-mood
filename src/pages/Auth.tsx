@@ -20,7 +20,7 @@ const Auth = () => {
   };
 
   if (isNewUser) {
-    return <OnboardingFlow onComplete={handleOnboardingComplete} />;
+    return <OnboardingFlow onComplete={handleOnboardingComplete} onSwitchToLogin={handleSwitchToLogin} />;
   }
 
   return <LoginForm onSwitchToOnboarding={handleSwitchToOnboarding} />;
