@@ -19,13 +19,14 @@ export const useProfile = () => {
 
   const loadProfile = useCallback(async () => {
     if (!user) {
-      console.log('useProfile - No user, skipping profile load');
+      console.log('useProfile - No user, clearing profile and stopping load');
       setProfile(null);
       setLoading(false);
       return;
     }
 
     console.log('useProfile - Loading profile for user:', user.id);
+    setLoading(true);
 
     try {
       const { data, error } = await supabase
@@ -42,7 +43,8 @@ export const useProfile = () => {
       console.log('useProfile - Profile loaded:', data);
       setProfile(data);
     } catch (error) {
-      console.error('Error loading profile:', error);
+      console.error('useProfile - Error loading profile:', error);
+      setProfile(null);
     } finally {
       setLoading(false);
     }

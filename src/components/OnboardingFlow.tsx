@@ -50,62 +50,101 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
   };
 
   const handleFinish = async () => {
-    console.log('OnboardingFlow - Starting account creation');
+    console.log('OnboardingFlow - Starting account creation with data:', {
+      name: data.name,
+      age: data.age,
+      email: data.email,
+      gender: data.gender,
+      passwordLength: data.password.length
+    });
+    
     setLoading(true);
 
     try {
-      const { error } = await createAccount(data.email, data.password);
+      // Step 1: Create the account
+      const { error: authError } = await createAccount(data.email, data.password);
 
-      if (error) {
-        console.error('OnboardingFlow - Account creation error:', error);
+      if (authError) {
+        console.error('OnboardingFlow - Account creation error:', authError);
         toast({
           title: 'Error',
-          description: error.message || 'Failed to create account',
+          description: authError.message || 'Failed to create account',
           variant: 'destructive',
         });
         setLoading(false);
         return;
       }
 
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData?.user;
+      console.log('OnboardingFlow - Account created, waiting for auth state...');
 
-      if (user) {
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: user.id,
-          email: user.email,
-          full_name: data.name,
-          age: parseInt(data.age),
-          gender: data.gender,
-          setup_completed: false,
+      // Step 2: Wait a moment for auth state to settle
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Step 3: Get the current user
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !userData?.user) {
+        console.error('OnboardingFlow - Error getting user after signup:', userError);
+        toast({
+          title: 'Error',
+          description: 'Account created but failed to get user data. Please try logging in.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      const user = userData.user;
+      console.log('OnboardingFlow - User obtained:', user.id);
+
+      // Step 4: Create or update the profile with complete data
+      const profileData = {
+        id: user.id,
+        email: user.email,
+        full_name: data.name.trim(),
+        age: parseInt(data.age),
+        gender: data.gender,
+        setup_completed: false, // Will be set to true in Setup page
+      };
+
+      console.log('OnboardingFlow - Creating profile with data:', profileData);
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(profileData, { 
+          onConflict: 'id',
+          ignoreDuplicates: false 
         });
 
-        if (profileError) {
-          console.error('OnboardingFlow - Error creating profile:', profileError);
-          toast({
-            title: 'Error',
-            description: 'Failed to create your profile. Please try logging in again.',
-            variant: 'destructive',
-          });
-          setLoading(false);
-          return;
-        }
-
-        console.log('OnboardingFlow - Profile created successfully');
+      if (profileError) {
+        console.error('OnboardingFlow - Error creating profile:', profileError);
+        toast({
+          title: 'Profile Creation Failed',
+          description: 'Your account was created but we had trouble setting up your profile. Please try refreshing the page.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
       }
+
+      console.log('OnboardingFlow - Profile created successfully');
 
       toast({
         title: 'Welcome to HabitHaven!',
-        description: "Your sanctuary is ready. Let's start building great habits!",
+        description: "Your account is ready. Setting up your sanctuary...",
       });
+
+      // Let the auth context and ProtectedRoute handle the navigation
+      // Don't manually navigate here to avoid race conditions
+      onComplete();
+
     } catch (error) {
-      console.error('OnboardingFlow - Error creating account:', error);
+      console.error('OnboardingFlow - Unexpected error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create your account. Please try again.',
+        description: 'An unexpected error occurred. Please try again.',
         variant: 'destructive',
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -115,7 +154,7 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
       case 1:
         return data.name.trim().length > 0;
       case 2:
-        return data.age.trim().length > 0 && parseInt(data.age) > 0;
+        return data.age.trim().length > 0 && parseInt(data.age) > 0 && parseInt(data.age) <= 120;
       case 3:
         return data.email.trim().length > 0 && data.email.includes('@');
       case 4:
