@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Home, Sparkles } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OnboardingData {
   name: string;
@@ -51,49 +52,78 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
   const handleFinish = async () => {
     console.log('OnboardingFlow - Starting account creation');
     setLoading(true);
-    
+
     try {
-      // Create the account
       const { error } = await createAccount(data.email, data.password);
-      
+
       if (error) {
         console.error('OnboardingFlow - Account creation error:', error);
         toast({
-          title: "Error",
-          description: error.message || "Failed to create account",
-          variant: "destructive",
+          title: 'Error',
+          description: error.message || 'Failed to create account',
+          variant: 'destructive',
         });
         setLoading(false);
         return;
       }
 
-      console.log('OnboardingFlow - Account created successfully');
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+
+      if (user) {
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: user.id,
+          email: user.email,
+          full_name: data.name,
+          age: parseInt(data.age),
+          gender: data.gender,
+          setup_completed: false,
+        });
+
+        if (profileError) {
+          console.error('OnboardingFlow - Error creating profile:', profileError);
+          toast({
+            title: 'Error',
+            description: 'Failed to create your profile. Please try logging in again.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+
+        console.log('OnboardingFlow - Profile created successfully');
+      }
+
       toast({
-        title: "Welcome to HabitHaven!",
+        title: 'Welcome to HabitHaven!',
         description: "Your sanctuary is ready. Let's start building great habits!",
       });
-      
-      // The AuthProvider will handle the auth state change and redirect
-      // Don't call onComplete here, let the auth state change handle the redirect
     } catch (error) {
       console.error('OnboardingFlow - Error creating account:', error);
       toast({
-        title: "Error",
-        description: "Failed to create your account. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to create your account. Please try again.',
+        variant: 'destructive',
       });
+    } finally {
       setLoading(false);
     }
   };
 
   const isStepValid = () => {
     switch (currentStep) {
-      case 1: return data.name.trim().length > 0;
-      case 2: return data.age.trim().length > 0 && parseInt(data.age) > 0;
-      case 3: return data.email.trim().length > 0 && data.email.includes('@');
-      case 4: return data.gender.trim().length > 0;
-      case 5: return data.password.trim().length >= 6;
-      default: return false;
+      case 1:
+        return data.name.trim().length > 0;
+      case 2:
+        return data.age.trim().length > 0 && parseInt(data.age) > 0;
+      case 3:
+        return data.email.trim().length > 0 && data.email.includes('@');
+      case 4:
+        return data.gender.trim().length > 0;
+      case 5:
+        return data.password.trim().length >= 6;
+      default:
+        return false;
     }
   };
 
@@ -131,7 +161,6 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
             </div>
           </div>
         );
-
       case 2:
         return (
           <div className="space-y-4">
@@ -154,7 +183,6 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
             </div>
           </div>
         );
-
       case 3:
         return (
           <div className="space-y-4">
@@ -175,7 +203,6 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
             </div>
           </div>
         );
-
       case 4:
         return (
           <div className="space-y-4">
@@ -200,7 +227,6 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
             </div>
           </div>
         );
-
       case 5:
         return (
           <div className="space-y-4">
@@ -222,7 +248,6 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
             </div>
           </div>
         );
-
       default:
         return null;
     }
@@ -269,7 +294,7 @@ const OnboardingFlow = ({ onComplete, onSwitchToLogin }: OnboardingFlowProps) =>
             >
               Back
             </Button>
-            
+
             {currentStep < totalSteps ? (
               <Button
                 onClick={handleNext}
